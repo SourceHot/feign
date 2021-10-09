@@ -136,38 +136,38 @@
         </executions>
       </plugin>
 
-      <plugin>
-        <!-- used to create docker images -->
-        <groupId>com.spotify</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <configuration>
-          <!-- docker file copied here after maven replaces properties -->
-          <dockerDirectory>${project.build.directory}/classes/docker/</dockerDirectory>
+<!--      <plugin>-->
+<!--        &lt;!&ndash; used to create docker images &ndash;&gt;-->
+<!--        <groupId>com.spotify</groupId>-->
+<!--        <artifactId>docker-maven-plugin</artifactId>-->
+<!--        <configuration>-->
+<!--          &lt;!&ndash; docker file copied here after maven replaces properties &ndash;&gt;-->
+<!--          <dockerDirectory>${project.build.directory}/classes/docker/</dockerDirectory>-->
 
-          <!-- Pull image before build, otherwise end up with image not found if it was never downloaded before -->
-          <pullOnBuild>true</pullOnBuild>
+<!--          &lt;!&ndash; Pull image before build, otherwise end up with image not found if it was never downloaded before &ndash;&gt;-->
+<!--          <pullOnBuild>true</pullOnBuild>-->
 
-          <serverId>docker-hub</serverId>
-          <registryUrl>https://index.docker.io/v1/</registryUrl>
-          <imageName>feign-apt-generator/test</imageName>
-          <resources>
-            <resource>
-              <targetPath>/</targetPath>
-              <directory>${project.build.directory}</directory>
-              <include>${project.artifactId}-${project.version}.jar</include>
-            </resource>
-          </resources>
-        </configuration>
-        <executions>
-          <!-- see definition of how this runs above -->
-          <execution>
-            <phase>post-integration-test</phase>
-            <goals>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+<!--          <serverId>docker-hub</serverId>-->
+<!--          <registryUrl>https://index.docker.io/v1/</registryUrl>-->
+<!--          <imageName>feign-apt-generator/test</imageName>-->
+<!--          <resources>-->
+<!--            <resource>-->
+<!--              <targetPath>/</targetPath>-->
+<!--              <directory>${project.build.directory}</directory>-->
+<!--              <include>${project.artifactId}-${project.version}.jar</include>-->
+<!--            </resource>-->
+<!--          </resources>-->
+<!--        </configuration>-->
+<!--        <executions>-->
+<!--          &lt;!&ndash; see definition of how this runs above &ndash;&gt;-->
+<!--          <execution>-->
+<!--            <phase>post-integration-test</phase>-->
+<!--            <goals>-->
+<!--              <goal>build</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
     </plugins>
   </build>
 </project>
