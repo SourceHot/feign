@@ -29,9 +29,11 @@ final class DefaultMethodHandler implements MethodHandler {
   // Uses Java 7 MethodHandle based reflection. As default methods will only exist when
   // run on a Java 8 JVM this will not affect use on legacy JVMs.
   // When Feign upgrades to Java 7, remove the @IgnoreJRERequirement annotation.
+  // 方法句柄
   private final MethodHandle unboundHandle;
 
   // handle is effectively final after bindTo has been called.
+  // 方法句柄
   private MethodHandle handle;
 
   public DefaultMethodHandler(Method defaultMethod) {

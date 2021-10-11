@@ -65,8 +65,17 @@ public interface Target<T> {
 
   public static class HardCodedTarget<T> implements Target<T> {
 
+    /**
+     * 类对象
+      */
     private final Class<T> type;
+    /**
+     * 名称
+      */
     private final String name;
+    /**
+     * 路由
+      */
     private final String url;
 
     public HardCodedTarget(Class<T> type, String url) {

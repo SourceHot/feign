@@ -26,6 +26,8 @@ import feign.codec.ErrorDecoder;
 /**
  * The response handler that is used to provide asynchronous support on top of standard response
  * handling
+ *
+ * 异步响应处理器
  */
 @Experimental
 class AsyncResponseHandler {
@@ -61,6 +63,7 @@ class AsyncResponseHandler {
                       Type returnType,
                       long elapsedTime) {
     // copied fairly liberally from SynchronousMethodHandler
+    // 是否需要关闭
     boolean shouldClose = true;
 
     try {
@@ -68,42 +71,75 @@ class AsyncResponseHandler {
         response = logger.logAndRebufferResponse(configKey, logLevel, response,
             elapsedTime);
       }
+      // 返回值类型如果是Response
       if (Response.class == returnType) {
         if (response.body() == null) {
+          // 处理响应
           resultFuture.complete(response);
-        } else if (response.body().length() == null
+        }
+        // 响应体为空或者响应体大小超过最大缓冲值
+        else if (response.body().length() == null
             || response.body().length() > MAX_RESPONSE_BUFFER_SIZE) {
+          // 标记不需要关闭
           shouldClose = false;
+          // 处理响应
           resultFuture.complete(response);
-        } else {
+        }
+        // 其他情况
+        else {
           // Ensure the response body is disconnected
+          // 获取响应对象转换成byte数组
           final byte[] bodyData = Util.toByteArray(response.body().asInputStream());
+          // 处理响应
           resultFuture.complete(response.toBuilder().body(bodyData).build());
         }
-      } else if (response.status() >= 200 && response.status() < 300) {
+      }
+      // 如果响应码大于等于200并且小于等于300
+      else if (response.status() >= 200 && response.status() < 300) {
+        // 确认返回值是否是void
         if (isVoidType(returnType)) {
+          // 处理响应
           resultFuture.complete(null);
-        } else {
+        }
+        // 其他情况
+        else {
+          // 解码获取响应对象
           final Object result = decode(response, returnType);
           shouldClose = closeAfterDecode;
+          // 处理响应
           resultFuture.complete(result);
         }
-      } else if (decode404 && response.status() == 404 && !isVoidType(returnType)) {
+      }
+      // 满足下面三个条件则作处理
+      // 1. 不需要解码404
+      // 2. 响应码为404
+      // 3. 响应对象不是void
+      else if (decode404 && response.status() == 404 && !isVoidType(returnType)) {
+        // 解码获取响应对象
         final Object result = decode(response, returnType);
+        // 设置是否需要关闭
         shouldClose = closeAfterDecode;
+        // 处理响应
         resultFuture.complete(result);
-      } else {
+      }
+      // 其他情况
+      else {
+        // 处理响应
         resultFuture.completeExceptionally(errorDecoder.decode(configKey, response));
       }
     } catch (final IOException e) {
       if (logLevel != Level.NONE) {
         logger.logIOException(configKey, logLevel, e, elapsedTime);
       }
+      // 处理响应，设置异常
       resultFuture.completeExceptionally(errorReading(response.request(), response, e));
     } catch (final Exception e) {
+      // 处理响应，设置异常
       resultFuture.completeExceptionally(e);
     } finally {
+      // 如果需要关闭则进行关闭操作
       if (shouldClose) {
+        // 关闭
         ensureClosed(response.body());
       }
     }

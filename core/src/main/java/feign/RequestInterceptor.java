@@ -46,6 +46,8 @@ package feign;
  * <br>
  * This class is similar to {@code RequestInterceptor.intercept()}, except that the implementation
  * can read, remove, or otherwise mutate any part of the request template.
+ * 
+ * 请求拦截器
  */
 public interface RequestInterceptor {
 

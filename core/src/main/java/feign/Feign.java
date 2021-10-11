@@ -1,11 +1,11 @@
 /**
  * Copyright 2012-2020 The Feign Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -13,13 +13,6 @@
  */
 package feign;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import feign.Logger.Level;
 import feign.Logger.NoOpLogger;
 import feign.ReflectiveFeign.ParseHandlersByName;
 import feign.Request.Options;
@@ -28,6 +21,14 @@ import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.querymap.FieldQueryMapEncoder;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static feign.ExceptionPropagationPolicy.NONE;
 
 /**
@@ -60,11 +61,11 @@ public abstract class Feign {
    * route53.Route53#listAt(String, String)}</li>
    * </ul>
    * </pre>
-   *
+   * <p>
    * Note that there is no whitespace expected in a key!
    *
    * @param targetType {@link feign.Target#type() type} of the Feign interface.
-   * @param method invoked method, present on {@code type} or its super.
+   * @param method     invoked method, present on {@code type} or its super.
    * @see MethodMetadata#configKey()
    */
   public static String configKey(Class targetType, Method method) {
@@ -97,25 +98,76 @@ public abstract class Feign {
 
   public static class Builder {
 
+    /**
+     * 请求拦截器集合
+     */
     private final List<RequestInterceptor> requestInterceptors =
         new ArrayList<RequestInterceptor>();
+    /**
+     * Capability 接口集合
+     */
+    private final List<Capability> capabilities = new ArrayList<>();
+    /**
+     * 日志级别
+     */
     private Logger.Level logLevel = Logger.Level.NONE;
+    /**
+     * Contract接口,用于解析Feign中的注解
+     */
     private Contract contract = new Contract.Default();
+    /**
+     * Client接口, 用于提交HTTP请求
+     */
     private Client client = new Client.Default(null, null);
+    /**
+     * Retryer接口,重试策略
+     */
     private Retryer retryer = new Retryer.Default();
+    /**
+     * 日志
+     */
     private Logger logger = new NoOpLogger();
+    /**
+     *编码接口
+     */
     private Encoder encoder = new Encoder.Default();
+    /**
+     *解码接口
+     */
     private Decoder decoder = new Decoder.Default();
+    /**
+     * 将对象编码到查询MAP中
+     */
     private QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+    /**
+     *异常解码器
+     */
     private ErrorDecoder errorDecoder = new ErrorDecoder.Default();
+    /**
+     * 客户端选项
+     */
     private Options options = new Options();
+    /**
+     * InvocationHandlerFactory接口，用于生产InvocationHandler接口实现类
+     */
     private InvocationHandlerFactory invocationHandlerFactory =
         new InvocationHandlerFactory.Default();
+    /**
+     * 是否解码404
+     */
     private boolean decode404;
+    /**
+     * 是否在解码后关闭
+     */
     private boolean closeAfterDecode = true;
+    /**
+     * 异常传播策略
+     */
     private ExceptionPropagationPolicy propagationPolicy = NONE;
+    /**
+     * 是否强制解码
+     */
     private boolean forceDecoding = false;
-    private List<Capability> capabilities = new ArrayList<>();
 
     public Builder logLevel(Logger.Level logLevel) {
       this.logLevel = logLevel;
@@ -168,12 +220,12 @@ public abstract class Feign {
     /**
      * This flag indicates that the {@link #decoder(Decoder) decoder} should process responses with
      * 404 status, specifically returning null or empty instead of throwing {@link FeignException}.
-     *
+     * <p>
      * <p/>
      * All first-party (ex gson) decoders return well-known empty values defined by
      * {@link Util#emptyValueOf}. To customize further, wrap an existing {@link #decoder(Decoder)
      * decoder} or make your own.
-     *
+     * <p>
      * <p/>
      * This flag only works with 404, as opposed to all or arbitrary status codes. This was an
      * explicit decision: 404 -> empty is safe, common and doesn't complicate redirection, retry or
@@ -236,7 +288,6 @@ public abstract class Feign {
      * somewhere in the Decoder (you can use {@link Util#ensureClosed} for convenience).
      *
      * @since 9.6
-     *
      */
     public Builder doNotCloseAfterDecode() {
       this.closeAfterDecode = false;
@@ -270,29 +321,44 @@ public abstract class Feign {
     }
 
     public Feign build() {
+      // 对Client进行拓展
       Client client = Capability.enrich(this.client, capabilities);
+      // 对Retryer进行拓展
       Retryer retryer = Capability.enrich(this.retryer, capabilities);
+      // 对RequestInterceptor进行拓展
       List<RequestInterceptor> requestInterceptors = this.requestInterceptors.stream()
           .map(ri -> Capability.enrich(ri, capabilities))
           .collect(Collectors.toList());
+      // 对Logger进行拓展
       Logger logger = Capability.enrich(this.logger, capabilities);
+      // 对Contract进行拓展
       Contract contract = Capability.enrich(this.contract, capabilities);
+      // 对Options进行拓展
       Options options = Capability.enrich(this.options, capabilities);
+      // 对Encoder进行拓展
       Encoder encoder = Capability.enrich(this.encoder, capabilities);
+      // 对Decoder进行拓展
       Decoder decoder = Capability.enrich(this.decoder, capabilities);
+      // 对InvocationHandlerFactory进行拓展
       InvocationHandlerFactory invocationHandlerFactory =
           Capability.enrich(this.invocationHandlerFactory, capabilities);
+
+      // 对QueryMapEncoder进行拓展
       QueryMapEncoder queryMapEncoder = Capability.enrich(this.queryMapEncoder, capabilities);
 
+      // 构建SynchronousMethodHandler.Factory对象
       SynchronousMethodHandler.Factory synchronousMethodHandlerFactory =
           new SynchronousMethodHandler.Factory(client, retryer, requestInterceptors, logger,
               logLevel, decode404, closeAfterDecode, propagationPolicy, forceDecoding);
+      // 创建ParseHandlersByName对象
       ParseHandlersByName handlersByName =
           new ParseHandlersByName(contract, options, encoder, decoder, queryMapEncoder,
               errorDecoder, synchronousMethodHandlerFactory);
+      // 创建ReflectiveFeign对象
       return new ReflectiveFeign(handlersByName, invocationHandlerFactory, queryMapEncoder);
     }
   }
+
 
   public static class ResponseMappingDecoder implements Decoder {
 

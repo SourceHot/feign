@@ -62,6 +62,8 @@ import static java.lang.String.format;
  * &#064;RequestLine(&quot;POST /&quot;)
  * Session login(@Param(&quot;username&quot;) String username, @Param(&quot;password&quot;) String password);
  * </pre>
+ *
+ * 编码接口
  */
 public interface Encoder {
   /** Type literal for {@code Map<String, ?>}, indicating the object to encode is a form. */

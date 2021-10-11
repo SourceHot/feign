@@ -46,34 +46,56 @@ public class ReflectiveFeign extends Feign {
   @SuppressWarnings("unchecked")
   @Override
   public <T> T newInstance(Target<T> target) {
+    // 通过类对象转换得到方法名称和MethodHandler的映射
     Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
+    // 方法和MethodHandler的映射
     Map<Method, MethodHandler> methodToHandler = new LinkedHashMap<Method, MethodHandler>();
+    // 默认的MethodHandler对象集合
     List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<DefaultMethodHandler>();
 
+    // 循环目标对象中存在的方法集合
     for (Method method : target.type().getMethods()) {
+      // 如果方法所在的类是Object跳过处理
       if (method.getDeclaringClass() == Object.class) {
         continue;
-      } else if (Util.isDefault(method)) {
+      }
+      // 确认是否是默认的方法
+      else if (Util.isDefault(method)) {
+        // 创建默认的MethodHandler对象
         DefaultMethodHandler handler = new DefaultMethodHandler(method);
+        // 加入到默认的MethodHandler对象集合中
         defaultMethodHandlers.add(handler);
+        // 放入methodToHandler容器
         methodToHandler.put(method, handler);
-      } else {
+      }
+      // 其他情况直接放入容器
+      else {
         methodToHandler.put(method, nameToHandler.get(Feign.configKey(target.type(), method)));
       }
     }
+    // 构建InvocationHandler对象
     InvocationHandler handler = factory.create(target, methodToHandler);
+    // 代理类创建
     T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
         new Class<?>[] {target.type()}, handler);
 
+    // 处理默认的MethodHandler对象集合中的数据绑定代理对象
     for (DefaultMethodHandler defaultMethodHandler : defaultMethodHandlers) {
       defaultMethodHandler.bindTo(proxy);
     }
+    // 返回代理对象
     return proxy;
   }
 
   static class FeignInvocationHandler implements InvocationHandler {
 
+    /**
+     * 目标对象
+      */
     private final Target target;
+    /**
+     * 方法和MethodHandler的映射
+      */
     private final Map<Method, MethodHandler> dispatch;
 
     FeignInvocationHandler(Target target, Map<Method, MethodHandler> dispatch) {

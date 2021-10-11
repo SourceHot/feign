@@ -13,6 +13,17 @@
  */
 package feign;
 
+/**
+ * 异常传播策略
+ */
 public enum ExceptionPropagationPolicy {
-  NONE, UNWRAP
+
+  /**
+   * 不做操作
+   */
+  NONE,
+  /**
+   * 抛出异常
+   */
+  UNWRAP
 }

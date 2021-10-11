@@ -1,11 +1,11 @@
 /**
  * Copyright 2012-2020 The Feign Authors
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
+ * <p>
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
 import static feign.Util.checkNotNull;
 import static feign.Util.valuesOrEmpty;
 
@@ -29,8 +30,31 @@ import static feign.Util.valuesOrEmpty;
  */
 public final class Request implements Serializable {
 
-  public enum HttpMethod {
-    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+  private final HttpMethod httpMethod;
+  private final String url;
+  private final Map<String, Collection<String>> headers;
+  private final Body body;
+  private final RequestTemplate requestTemplate;
+
+  /**
+   * Creates a new Request.
+   *
+   * @param method of the request.
+   * @param url for the request.
+   * @param headers for the request.
+   * @param body for the request, optional.
+   * @param requestTemplate used to build the request.
+   */
+  Request(HttpMethod method,
+          String url,
+          Map<String, Collection<String>> headers,
+          Body body,
+          RequestTemplate requestTemplate) {
+    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
+    this.url = checkNotNull(url, "url");
+    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
+    this.body = body;
+    this.requestTemplate = requestTemplate;
   }
 
   /**
@@ -105,33 +129,6 @@ public final class Request implements Serializable {
     return new Request(httpMethod, url, headers, body, requestTemplate);
   }
 
-  private final HttpMethod httpMethod;
-  private final String url;
-  private final Map<String, Collection<String>> headers;
-  private final Body body;
-  private final RequestTemplate requestTemplate;
-
-  /**
-   * Creates a new Request.
-   *
-   * @param method of the request.
-   * @param url for the request.
-   * @param headers for the request.
-   * @param body for the request, optional.
-   * @param requestTemplate used to build the request.
-   */
-  Request(HttpMethod method,
-      String url,
-      Map<String, Collection<String>> headers,
-      Body body,
-      RequestTemplate requestTemplate) {
-    this.httpMethod = checkNotNull(method, "httpMethod of %s", method.name());
-    this.url = checkNotNull(url, "url");
-    this.headers = checkNotNull(headers, "headers of %s %s", method, url);
-    this.body = body;
-    this.requestTemplate = requestTemplate;
-  }
-
   /**
    * Http Method for this request.
    *
@@ -151,7 +148,6 @@ public final class Request implements Serializable {
   public HttpMethod httpMethod() {
     return this.httpMethod;
   }
-
 
   /**
    * URL for the request.
@@ -223,16 +219,41 @@ public final class Request implements Serializable {
     return builder.toString();
   }
 
+  @Experimental
+  public RequestTemplate requestTemplate() {
+    return this.requestTemplate;
+  }
+
+  public enum HttpMethod {
+    GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
+  }
+
+
   /**
    * Controls the per-request settings currently required to be implemented by all {@link Client
    * clients}
    */
   public static class Options {
 
+    /**
+     * 连接超时时间
+     */
     private final long connectTimeout;
+    /**
+     * 连接超时时间单位
+     */
     private final TimeUnit connectTimeoutUnit;
+    /**
+     * 读取超时时间
+     */
     private final long readTimeout;
+    /**
+     * 读取超时时间单位
+     */
     private final TimeUnit readTimeoutUnit;
+    /**
+     * 是否重定向
+     */
     private final boolean followRedirects;
 
     /**
@@ -261,8 +282,8 @@ public final class Request implements Serializable {
      * @param followRedirects if the request should follow 3xx redirections.
      */
     public Options(long connectTimeout, TimeUnit connectTimeoutUnit,
-        long readTimeout, TimeUnit readTimeoutUnit,
-        boolean followRedirects) {
+                   long readTimeout, TimeUnit readTimeoutUnit,
+                   boolean followRedirects) {
       super();
       this.connectTimeout = connectTimeout;
       this.connectTimeoutUnit = connectTimeoutUnit;
@@ -362,10 +383,6 @@ public final class Request implements Serializable {
 
   }
 
-  @Experimental
-  public RequestTemplate requestTemplate() {
-    return this.requestTemplate;
-  }
 
   /**
    * Request Body
@@ -391,29 +408,6 @@ public final class Request implements Serializable {
     private Body(byte[] data, Charset encoding) {
       this.data = data;
       this.encoding = encoding;
-    }
-
-    public Optional<Charset> getEncoding() {
-      return Optional.ofNullable(this.encoding);
-    }
-
-    public int length() {
-      /* calculate the content length based on the data provided */
-      return data != null ? data.length : 0;
-    }
-
-    public byte[] asBytes() {
-      return data;
-    }
-
-    public String asString() {
-      return !isBinary()
-          ? new String(data, encoding)
-          : "Binary data";
-    }
-
-    public boolean isBinary() {
-      return encoding == null || data == null;
     }
 
     public static Body create(String data) {
@@ -449,6 +443,29 @@ public final class Request implements Serializable {
 
     public static Body empty() {
       return new Body();
+    }
+
+    public Optional<Charset> getEncoding() {
+      return Optional.ofNullable(this.encoding);
+    }
+
+    public int length() {
+      /* calculate the content length based on the data provided */
+      return data != null ? data.length : 0;
+    }
+
+    public byte[] asBytes() {
+      return data;
+    }
+
+    public String asString() {
+      return !isBinary()
+          ? new String(data, encoding)
+          : "Binary data";
+    }
+
+    public boolean isBinary() {
+      return encoding == null || data == null;
     }
 
   }

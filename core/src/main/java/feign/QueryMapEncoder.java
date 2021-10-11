@@ -20,6 +20,7 @@ import java.util.Map;
 /**
  * A QueryMapEncoder encodes Objects into maps of query parameter names to values.
  *
+ * 将对象编码到查询MAP中
  * @see FieldQueryMapEncoder
  * @see BeanQueryMapEncoder
  *
