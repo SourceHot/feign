@@ -227,6 +227,7 @@ public interface Contract {
     static final Pattern REQUEST_LINE_PATTERN = Pattern.compile("^([A-Z]+)[ ]*(.*)$");
 
     public Default() {
+      // 注册类上的Headers注解信息
       super.registerClassAnnotation(Headers.class, (header, data) -> {
         final String[] headersOnType = header.value();
         checkState(headersOnType.length > 0, "Headers annotation was empty on type %s.",
@@ -236,6 +237,7 @@ public interface Contract {
         data.template().headers(null); // to clear
         data.template().headers(headers);
       });
+      // 注册方法上的RequestLine注解信息
       super.registerMethodAnnotation(RequestLine.class, (ann, data) -> {
         final String requestLine = ann.value();
         checkState(emptyToNull(requestLine) != null,
@@ -254,6 +256,7 @@ public interface Contract {
         data.template()
             .collectionFormat(ann.collectionFormat());
       });
+      // 注册方法上的Body注解信息
       super.registerMethodAnnotation(Body.class, (ann, data) -> {
         final String body = ann.value();
         checkState(emptyToNull(body) != null, "Body annotation was empty on method %s.",
@@ -264,12 +267,14 @@ public interface Contract {
           data.template().bodyTemplate(body);
         }
       });
+      // 注册方法上的Headers注解信息
       super.registerMethodAnnotation(Headers.class, (header, data) -> {
         final String[] headersOnMethod = header.value();
         checkState(headersOnMethod.length > 0, "Headers annotation was empty on method %s.",
             data.configKey());
         data.template().headers(toMap(headersOnMethod));
       });
+      // 注册方法参数上的Param注解信息
       super.registerParameterAnnotation(Param.class, (paramAnnotation, data, paramIndex) -> {
         final String annotationName = paramAnnotation.value();
         final Parameter parameter = data.method().getParameters()[paramIndex];
@@ -290,12 +295,14 @@ public interface Contract {
           data.formParams().add(name);
         }
       });
+      // 注册方法参数上的QueryMap注解信息
       super.registerParameterAnnotation(QueryMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.queryMapIndex() == null,
             "QueryMap annotation was present on multiple parameters.");
         data.queryMapIndex(paramIndex);
         data.queryMapEncoded(queryMap.encoded());
       });
+      // 注册方法参数上的HeaderMap注解信息
       super.registerParameterAnnotation(HeaderMap.class, (queryMap, data, paramIndex) -> {
         checkState(data.headerMapIndex() == null,
             "HeaderMap annotation was present on multiple parameters.");
