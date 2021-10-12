@@ -170,23 +170,34 @@ public class ReflectiveFeign extends Feign {
     }
 
     public Map<String, MethodHandler> apply(Target target) {
+      // 获取方法元数据集合
       List<MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type());
+      // 创建处理结果集合
       Map<String, MethodHandler> result = new LinkedHashMap<String, MethodHandler>();
+      // 循环方法元数据集合
       for (MethodMetadata md : metadata) {
+        // 构建RequestTemplate对象的工厂类
         BuildTemplateByResolvingArgs buildTemplate;
+        // 表单参数不为空并且bodyTemplate不为空创建BuildFormEncodedTemplateFromArgs对象
         if (!md.formParams().isEmpty() && md.template().bodyTemplate() == null) {
           buildTemplate =
               new BuildFormEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else if (md.bodyIndex() != null) {
+        }
+        // bodyIndex不为空创建BuildEncodedTemplateFromArgs对象
+        else if (md.bodyIndex() != null) {
           buildTemplate = new BuildEncodedTemplateFromArgs(md, encoder, queryMapEncoder, target);
-        } else {
+        }
+        // 其他情况创建BuildTemplateByResolvingArgs
+        else {
           buildTemplate = new BuildTemplateByResolvingArgs(md, queryMapEncoder, target);
         }
+        // 需要忽略的情况下加入数据，MethodHandler的处理对象是抛出异常
         if (md.isIgnored()) {
           result.put(md.configKey(), args -> {
             throw new IllegalStateException(md.configKey() + " is not a method handled by feign");
           });
         } else {
+          // 向结果集合中加入数据
           result.put(md.configKey(),
               factory.create(target, md, buildTemplate, options, decoder, errorDecoder));
         }

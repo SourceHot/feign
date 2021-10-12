@@ -27,8 +27,17 @@ import feign.Contract.BaseContract;
  */
 public abstract class DeclarativeContract extends BaseContract {
 
+  /**
+   * 存储类上的注解处理器
+    */
   private final List<GuardedAnnotationProcessor> classAnnotationProcessors = new ArrayList<>();
+  /**
+   * 存储方法上的注解处理器
+    */
   private final List<GuardedAnnotationProcessor> methodAnnotationProcessors = new ArrayList<>();
+  /**
+   * 存储方法参数上的注解处理器
+    */
   private final Map<Class<Annotation>, DeclarativeContract.ParameterAnnotationProcessor<Annotation>> parameterAnnotationProcessors =
       new HashMap<>();
 
